@@ -9,7 +9,12 @@ classifiers = ["Programming Language :: Python :: 3"]
 license = 'MIT'
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "dawn-python>=0.3.0",
+    "numpy>=2.4.4",
+    "opencv-python>=4.13.0.92",
+    "pydawn>=1.0.22",
+]
 
 [build-system]
 requires = ["setuptools"]

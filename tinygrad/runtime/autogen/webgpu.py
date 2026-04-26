@@ -4,9 +4,19 @@ import ctypes
 from typing import Literal, TypeAlias
 from tinygrad.runtime.support.c import _IO, _IOW, _IOR, _IOWR
 from tinygrad.runtime.support import c
-from tinygrad.helpers import WIN, OSX
-import sysconfig, os
-dll = c.DLL('webgpu', os.path.join(sysconfig.get_paths()['purelib'], 'pydawn', 'lib', 'libwebgpu_dawn.dll') if WIN else 'webgpu_dawn')
+from tinygrad.helpers import WIN
+import sysconfig, os, sys, platform
+
+def _pydawn_lib_basename() -> str:
+  # pydawn wheels ship arch-specific names (not libwebgpu_dawn.{dylib,so}); see site-packages/pydawn/lib/
+  if WIN: return "libwebgpu_dawn.dll"
+  m = platform.machine().lower()
+  if sys.platform == "darwin": return f"libwebgpu_dawn_{'arm64' if m == 'arm64' else 'x86_64'}.dylib"
+  return f"libwebgpu_dawn_{'aarch64' if m in ('aarch64', 'arm64') else 'x86_64'}.so"
+
+_pydawn_lib = os.path.join(sysconfig.get_paths()["purelib"], "pydawn", "lib", _pydawn_lib_basename())
+# On Windows, pydawn always ships a single path; on Unix also try Homebrew/system names after site-packages.
+dll = c.DLL("webgpu", _pydawn_lib if WIN else [_pydawn_lib, "webgpu_dawn"])
 WGPUFlags: TypeAlias = ctypes.c_uint64
 WGPUBool: TypeAlias = ctypes.c_uint32
 class struct_WGPUAdapterImpl(c.Struct): pass
